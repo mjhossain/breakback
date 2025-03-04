@@ -1,23 +1,13 @@
 import React from "react";
 import {SafeAreaView,View, Text, StyleSheet, TouchableOpacity} from "react-native";
-// import Icon from '@react-native-vector-icons/fontawesome';
+
+import Timer from './src/timer';
 
 export default function App() {
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.timerBox}>
-        <Text style={timerStyles.timerText}>00:00</Text>
-        <View style={timerStyles.timerButtons}>
-            <TouchableOpacity style={timerStyles.timerButton}>
-              {/* <Icon name="play" size={20} color="white" /> */}
-              <Text style={timerStyles.timerButtonText}>Play</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={timerStyles.timerButton}>
-              {/* <Icon name="play" size={20} color="white" /> */}
-              <Text style={timerStyles.timerButtonText}>Stop/Reset</Text>
-            </TouchableOpacity>
-        </View>
-        
+        <Timer />
       </View>
       <View style={styles.todoListBox}>
         <Text style={todoListStyles.todoListTitle}>Todo List</Text>
@@ -89,6 +79,8 @@ const timerStyles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
+    flexDirection: "row",
+    gap: 10
   },
   timerButtonText: {
     fontSize: 16,
