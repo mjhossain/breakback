@@ -11,24 +11,24 @@ import {
   Platform,
 } from 'react-native';
 
-const Timer: React.FC = () => {
+const Timer = () => {
   // Timer states
-  const [seconds, setSeconds] = useState<number>(0);
-  const [isActive, setIsActive] = useState<boolean>(false);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
-  const [customMinutes, setCustomMinutes] = useState<string>('');
-  const [customSeconds, setCustomSeconds] = useState<string>('');
+  const [seconds, setSeconds] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState('');
+  const [customSeconds, setCustomSeconds] = useState('');
   
   // Ref to store interval ID
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef(null);
 
   // Predefined duration options (in minutes)
-  const durationOptions: number[] = [15, 30, 45, 60];
+  const durationOptions = [15, 30, 45, 60];
 
   // Format seconds to MM:SS
-  const formatTime = (totalSeconds: number): string => {
+  const formatTime = (totalSeconds) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds
@@ -37,7 +37,7 @@ const Timer: React.FC = () => {
   };
 
   // Start timer
-  const startTimer = (): void => {
+  const startTimer = () => {
     if (!isActive || isPaused) {
       setIsActive(true);
       setIsPaused(false);
@@ -58,30 +58,40 @@ const Timer: React.FC = () => {
   };
 
   // Pause timer
-  const pauseTimer = (): void => {
-    if (isActive && !isPaused && intervalRef.current) {
-      clearInterval(intervalRef.current);
+  const handlePauseReset = () => {
+    if (isActive && !isPaused) {
+      // First click: Pause the timer
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
       setIsPaused(true);
+    } else if (isPaused) {
+      // Second click when paused: Reset the timer
+      setIsActive(false);
+      setIsPaused(false);
+      setSeconds(0);
+      intervalRef.current = null;
     }
   };
 
   // Stop timer
-  const stopTimer = (): void => {
+  const stopTimer = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     setIsActive(false);
     setIsPaused(false);
+    setDuration(0);
   };
 
   // Set timer duration from preset options
-  const setDuration = (minutes: number): void => {
+  const setDuration = (minutes) => {
     setSeconds(minutes * 60);
     setModalVisible(false);
   };
   
   // Set custom timer duration
-  const setCustomDuration = (): void => {
+  const setCustomDuration = () => {
     const mins = parseInt(customMinutes) || 0;
     const secs = parseInt(customSeconds) || 0;
     setSeconds(mins * 60 + secs);
@@ -92,7 +102,7 @@ const Timer: React.FC = () => {
   };
 
   // Handle timer tap
-  const handleTimerPress = (): void => {
+  const handleTimerPress = () => {
     // Only show modal if timer is stopped
     if (!isActive && !isPaused) {
       setModalVisible(true);
@@ -121,7 +131,6 @@ const Timer: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.button,
-            styles.playButton,
             (isActive && !isPaused) && styles.disabledButton
           ]}
           onPress={startTimer}
@@ -132,27 +141,14 @@ const Timer: React.FC = () => {
 
         <TouchableOpacity
           style={[
-            styles.button, 
-            styles.pauseButton,
-            (!isActive || isPaused) && styles.disabledButton
+            styles.button
           ]}
-          onPress={pauseTimer}
+          onPress={handlePauseReset}
           disabled={!isActive || isPaused}
         >
-          <Text style={styles.buttonText}>Pause</Text>
+          <Text style={styles.buttonText}>{isPaused ? "Reset" : "Pause"}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.button, 
-            styles.stopButton,
-            (!isActive && !isPaused) && styles.disabledButton
-          ]}
-          onPress={stopTimer}
-          disabled={!isActive && !isPaused}
-        >
-          <Text style={styles.buttonText}>Stop</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Duration Selection Modal */}
@@ -222,7 +218,7 @@ const Timer: React.FC = () => {
                   </View>
                   
                   <TouchableOpacity
-                    style={styles.setButton}
+                    style={[styles.setButton, misc.boxWithShadow]}
                     onPress={setCustomDuration}
                   >
                     <Text style={styles.setButtonText}>Set Custom Time</Text>
@@ -231,7 +227,7 @@ const Timer: React.FC = () => {
               )}
               
               <TouchableOpacity
-                style={styles.closeButton}
+                style={[styles.closeButton, misc.boxWithShadow]}
                 onPress={() => {
                   setModalVisible(false);
                   setShowCustomInput(false);
@@ -255,38 +251,31 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   timerDisplay: {
-    marginBottom: 40,
+    marginBottom: 20,
     padding: 20,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#ddd',
+    height: 150,
+    // backgroundColor: '#f0f0f0'
   },
   timerText: {
-    fontSize: 48,
+    fontSize: 110,
     fontWeight: 'bold',
     color: '#333',
+    fontFamily: "Jersey 25",
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    alignItems: 'center',
+    // gap: 10,
     width: '100%',
   },
   button: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
-    minWidth: 100,
+    borderRadius: 25,
+    width: 150,
     alignItems: 'center',
-  },
-  playButton: {
-    backgroundColor: '#4CAF50',
-  },
-  pauseButton: {
-    backgroundColor: '#FFC107',
-  },
-  stopButton: {
-    backgroundColor: '#F44336',
+    backgroundColor: '#FF6652'
   },
   disabledButton: {
     opacity: 0.5,
@@ -294,7 +283,8 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 22,
+    fontFamily: "Jersey 25",
   },
   modalContainer: {
     flex: 1,
@@ -382,6 +372,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+});
+
+const misc = StyleSheet.create({
+  boxWithShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,  
+    elevation: 2
+  }
 });
 
 export default Timer;
