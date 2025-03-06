@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@react-native-community/art": "^1.1.2",
+    "@react-navigation/bottom-tabs": "^7.2.1",
+    "@react-navigation/native": "^7.0.15",
     "react": "19.0.0",
     "react-native": "0.78.0",
     "react-native-countdown-circle-timer": "^3.2.1",
     "react-native-progress": "^5.0.1",
     "react-native-progress-timer": "^1.0.3",
+    "react-native-safe-area-context": "^5.3.0",
+    "react-native-screens": "^4.9.1",
     "react-native-svg": "^15.11.2",
     "react-native-vector-icons": "^10.2.0"
   },
