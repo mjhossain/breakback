@@ -7,14 +7,20 @@ export default TodoListBox = () => {
 
   const [todoList, setTodoList] = useState(todoListData);
 
+
   const handleTodoList = (id) => {
     const newTodoList = todoList.map((item) => item.id == id ? {...item, completed: !item.completed} : item);
     setTodoList(newTodoList);
   }
 
-  const handleAddTodo = () => {
+  const addTodo = () => {
     const newTodoList = [...todoList, {id: todoList.length + 1, title: 'New Todo', completed: false}];
     setTodoList(newTodoList);
+  }
+
+
+  const handleAddTodo = () => {  
+    addTodo();
   }
 
 
@@ -22,7 +28,7 @@ export default TodoListBox = () => {
     <View style={[todoListStyles.todoListBox, misc.boxWithShadow]}>
         <View style={todoListStyles.todoListItems}>
           {
-            todoList.map((item) => { 
+            todoList.slice(0, 3).map((item) => { 
               return (
                 <View style={todoListStyles.todoListItemBox} key={item.id}>
                   <Text style={todoListStyles.todoListItemTitle}>{item.title}</Text>
@@ -37,7 +43,7 @@ export default TodoListBox = () => {
             <Text style={todoListStyles.todoListButtonText}>Add Todo</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </View>     
   )
 }
 
