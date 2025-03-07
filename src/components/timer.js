@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  AppState,
 } from 'react-native';
 
 const Timer = () => {
@@ -20,6 +21,9 @@ const Timer = () => {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customMinutes, setCustomMinutes] = useState('');
   const [customSeconds, setCustomSeconds] = useState('');
+  const [clockOutTime, setClockOutTime] = useState('');
+  const [backgroundTime, setBackgroundTime] = useState(null);
+  const appState = useRef(AppState.currentState);
   
   // Ref to store interval ID
   const intervalRef = useRef(null);
@@ -41,6 +45,10 @@ const Timer = () => {
     if (!isActive || isPaused) {
       setIsActive(true);
       setIsPaused(false);
+      setBackgroundTime(null);
+      
+      // Recalculate clock out time when resuming from pause
+      setClockOutTime(calculateClockOutTime(seconds));
       
       intervalRef.current = setInterval(() => {
         setSeconds((prevSeconds) => {
@@ -72,21 +80,32 @@ const Timer = () => {
       }
       setIsActive(false);
       setIsPaused(false);
-      setDuration(0);
+      setSeconds(0);
+      setClockOutTime(''); // Clear clock out time when resetting
     }
   };
 
-  // Set timer duration from preset options
+  // Helper function to calculate clock out time
+  const calculateClockOutTime = (durationInSeconds) => {
+    const now = new Date();
+    const clockOut = new Date(now.getTime() + durationInSeconds * 1000);
+    return clockOut.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Update both setDuration functions to calculate clock out time
   const setDuration = (minutes) => {
-    setSeconds(minutes * 60);
+    const totalSeconds = minutes * 60;
+    setSeconds(totalSeconds);
+    setClockOutTime(calculateClockOutTime(totalSeconds));
     setModalVisible(false);
   };
   
-  // Set custom timer duration
   const setCustomDuration = () => {
     const mins = parseInt(customMinutes) || 0;
     const secs = parseInt(customSeconds) || 0;
-    setSeconds(mins * 60 + secs);
+    const totalSeconds = mins * 60 + secs;
+    setSeconds(totalSeconds);
+    setClockOutTime(calculateClockOutTime(totalSeconds));
     setCustomMinutes('');
     setCustomSeconds('');
     setModalVisible(false);
@@ -111,9 +130,30 @@ const Timer = () => {
     };
   }, []);
 
-  // useEffect(() => {
-  //   console.log("Paused state changed:", isPaused);
-  // }, [isPaused]);
+  // Add this useEffect for handling app state changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        // App coming to foreground
+        if (backgroundTime && isActive && !isPaused) {
+          const currentTime = new Date();
+          const elapsedSeconds = Math.floor((currentTime - backgroundTime) / 1000);
+          setSeconds(prev => Math.max(0, prev - elapsedSeconds));
+        }
+      }
+      
+      if (nextAppState === 'background') {
+        // App going to background
+        setBackgroundTime(new Date());
+      }
+      
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isActive, isPaused, backgroundTime]);
 
   return (
     <View style={styles.container}>
@@ -121,7 +161,11 @@ const Timer = () => {
       <TouchableOpacity onPress={handleTimerPress} style={styles.timerDisplay}>
         <Text style={styles.timerText}>{formatTime(seconds)}</Text>
       </TouchableOpacity>
-
+      <View style={styles.returnToWorkBox}>
+          <Text style={styles.returnToWorkText}>
+            Clock Out Time: {clockOutTime || '--:--'}
+          </Text> 
+      </View>
       {/* Control Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -159,37 +203,37 @@ const Timer = () => {
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalContainer}
+          style={modalStyles.modalContainer}
         >
-          <SafeAreaView style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Select Duration</Text>
+          <SafeAreaView style={modalStyles.modalContainer}>
+            <View style={modalStyles.modalContent}>
+              <Text style={modalStyles.modalTitle}>Select Duration</Text>
               
               {!showCustomInput ? (
-                <View style={styles.optionsContainer}>
+                <View style={modalStyles.optionsContainer}>
                   {durationOptions.map((minutes, index) => (
                     <TouchableOpacity
                       key={index}
-                      style={styles.optionItem}
+                      style={modalStyles.optionItem}
                       onPress={() => setDuration(minutes)}
                     >
-                      <Text style={styles.optionText}>{minutes} min</Text>
+                      <Text style={modalStyles.optionText}>{minutes} min</Text>
                     </TouchableOpacity>
                   ))}
                   <TouchableOpacity
-                    style={styles.optionItem}
+                    style={modalStyles.optionItem}
                     onPress={() => setShowCustomInput(true)}
                   >
-                    <Text style={styles.optionText}>Custom</Text>
+                    <Text style={modalStyles.optionText}>Custom</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
-                <View style={styles.customInputContainer}>
-                  <View style={styles.inputRow}>
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Minutes</Text>
+                <View style={modalStyles.customInputContainer}>
+                  <View style={modalStyles.inputRow}>
+                    <View style={modalStyles.inputGroup}>
+                      <Text style={modalStyles.inputLabel}>Minutes</Text>
                       <TextInput
-                        style={styles.input}
+                        style={modalStyles.input}
                         keyboardType="number-pad"
                         value={customMinutes}
                         onChangeText={setCustomMinutes}
@@ -197,10 +241,10 @@ const Timer = () => {
                       />
                     </View>
                     
-                    <View style={styles.inputGroup}>
-                      <Text style={styles.inputLabel}>Seconds</Text>
+                    <View style={modalStyles.inputGroup}>
+                      <Text style={modalStyles.inputLabel}>Seconds</Text>
                       <TextInput
-                        style={styles.input}
+                        style={modalStyles.input}
                         keyboardType="number-pad"
                         maxLength={2}
                         value={customSeconds}
@@ -217,22 +261,22 @@ const Timer = () => {
                   </View>
                   
                   <TouchableOpacity
-                    style={[styles.setButton, misc.boxWithShadow]}
+                    style={[modalStyles.setButton, misc.boxWithShadow]}
                     onPress={setCustomDuration}
                   >
-                    <Text style={styles.setButtonText}>Set Custom Time</Text>
+                    <Text style={modalStyles.setButtonText}>Set Custom Time</Text>
                   </TouchableOpacity>
                 </View>
               )}
               
               <TouchableOpacity
-                style={[styles.closeButton, misc.boxWithShadow]}
+                style={[modalStyles.closeButton, misc.boxWithShadow]}
                 onPress={() => {
                   setModalVisible(false);
                   setShowCustomInput(false);
                 }}
               >
-                <Text style={styles.closeButtonText}>Cancel</Text>
+                <Text style={modalStyles.closeButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </SafeAreaView>
@@ -250,13 +294,13 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   timerDisplay: {
-    marginBottom: 20,
-    padding: 20,
+    marginBottom: 5,
+    padding:5,
     height: 150,
     // backgroundColor: '#f0f0f0'
   },
   timerText: {
-    fontSize: 110,
+    fontSize: 130,
     fontWeight: 'bold',
     color: '#333',
     fontFamily: "Jersey 25",
@@ -285,6 +329,20 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontFamily: "Jersey 25",
   },
+  returnToWorkBox: {
+    width: '100%',
+    alignItems: 'flex-end',
+    marginBottom: 15,
+  },
+  returnToWorkText: {
+    fontSize: 25,
+    fontWeight: 'bold',
+    fontFamily: "Jersey 25",
+  },
+});
+
+const modalStyles = StyleSheet.create({
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -372,7 +430,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-});
+})
 
 const misc = StyleSheet.create({
   boxWithShadow: {
