@@ -67,21 +67,13 @@ const Timer = () => {
       setIsPaused(true);
     } else if (isPaused) {
       // Second click when paused: Reset the timer
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
       setIsActive(false);
       setIsPaused(false);
-      setSeconds(0);
-      intervalRef.current = null;
+      setDuration(0);
     }
-  };
-
-  // Stop timer
-  const stopTimer = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    setIsActive(false);
-    setIsPaused(false);
-    setDuration(0);
   };
 
   // Set timer duration from preset options
@@ -119,6 +111,10 @@ const Timer = () => {
     };
   }, []);
 
+  // useEffect(() => {
+  //   console.log("Paused state changed:", isPaused);
+  // }, [isPaused]);
+
   return (
     <View style={styles.container}>
       {/* Timer Display */}
@@ -141,12 +137,15 @@ const Timer = () => {
 
         <TouchableOpacity
           style={[
-            styles.button
+            styles.button,
+            (!isActive && !isPaused) && styles.disabledButton
           ]}
           onPress={handlePauseReset}
-          disabled={!isActive || isPaused}
+          disabled={!isActive && !isPaused}
         >
-          <Text style={styles.buttonText}>{isPaused ? "Reset" : "Pause"}</Text>
+          <Text style={styles.buttonText}>
+            {isPaused ? "Reset" : "Pause"}
+          </Text>
         </TouchableOpacity>
 
       </View>
@@ -290,7 +289,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    // backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    width: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   modalContent: {
     width: '90%',
