@@ -12,6 +12,11 @@ export default TodoListBox = () => {
     setTodoList(newTodoList);
   }
 
+  const handleAddTodo = () => {
+    const newTodoList = [...todoList, {id: todoList.length + 1, title: 'New Todo', completed: false}];
+    setTodoList(newTodoList);
+  }
+
 
   return (
     <View style={[todoListStyles.todoListBox, misc.boxWithShadow]}>
@@ -23,12 +28,14 @@ export default TodoListBox = () => {
                   <Text style={todoListStyles.todoListItemTitle}>{item.title}</Text>
                   <TouchableOpacity style={todoListStyles.todoListMark} onPress={() => handleTodoList(item.id)}>
                     {item.completed ? <Icon name="check" size={20} color={primaryColor} /> : null}
-                    </TouchableOpacity>
+                  </TouchableOpacity>
                 </View>
               )
            })
           }
-          
+          <TouchableOpacity style={todoListStyles.todoListButton} onPress={handleAddTodo}>
+            <Text style={todoListStyles.todoListButtonText}>Add Todo</Text>
+          </TouchableOpacity>
         </View>
       </View>
   )
@@ -95,6 +102,20 @@ const todoListStyles = StyleSheet.create({
       fontWeight: "bold",
       color: "white",
       fontFamily: "Jersey 25",
+    },
+    todoListButton: {
+      width: "100%",
+      height: 60,
+      backgroundColor: primaryColor,
+      borderRadius: 18,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    todoListButtonText: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: "white",
     }
   });
 
