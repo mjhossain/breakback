@@ -1,9 +1,18 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, { useState } from 'react';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import todoList from '../data/data.js';
+import todoListData from '../data/data.js';
 
 export default TodoListBox = () => {
+
+  const [todoList, setTodoList] = useState(todoListData);
+
+  const handleTodoList = (id) => {
+    const newTodoList = todoList.map((item) => item.id == id ? {...item, completed: !item.completed} : item);
+    setTodoList(newTodoList);
+  }
+
+
   return (
     <View style={[todoListStyles.todoListBox, misc.boxWithShadow]}>
         <View style={todoListStyles.todoListItems}>
@@ -12,9 +21,9 @@ export default TodoListBox = () => {
               return (
                 <View style={todoListStyles.todoListItemBox} key={item.id}>
                   <Text style={todoListStyles.todoListItemTitle}>{item.title}</Text>
-                  <View style={todoListStyles.todoListMark}>
+                  <TouchableOpacity style={todoListStyles.todoListMark} onPress={() => handleTodoList(item.id)}>
                     {item.completed ? <Icon name="check" size={20} color={primaryColor} /> : null}
-                    </View>
+                    </TouchableOpacity>
                 </View>
               )
            })
